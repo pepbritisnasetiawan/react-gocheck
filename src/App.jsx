@@ -1,72 +1,66 @@
-/* eslint-disable react/prop-types */
+import { useEffect, useState } from 'react';
+import Logo from './components/Logo';
+import Form from './components/Form';
+import CheckList from './components/CheckList';
+import Stats from './components/Stats';
 import './App.css';
 
-const listItems = [
-  {
-    id: 1,
-    title: 'Eat',
-    done: true,
-  },
-  {
-    id: 2,
-    title: 'Sleep',
-    done: false,
-  },
-];
-
 function App() {
+  const [notes, setNotes] = useState(() => {
+    const savedNotes = localStorage.getItem('notes');
+    return savedNotes ? JSON.parse(savedNotes) : [];
+  });
+  
+  const [editingId, setEditingId] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem('notes', JSON.stringify(notes));
+  }, [notes])
+
+  const addNote = (newNote) => {
+    setNotes([...notes, newNote]);
+  };
+
+  const toggleNote = (id) => {
+    setNotes(
+      notes.map((note) =>
+        note.id === id ? { ...note, done: !note.done } : note
+      )
+    );
+  };
+
+  const deleteNote = (id) => {
+    setNotes(notes.filter((note) => note.id !== id));
+  };
+
+  const editNote = (id, newText) => {
+    setNotes(
+      notes.map((note) => (note.id === id ? { ...note, text: newText } : note))
+    );
+    setEditingId(null);
+  };
+
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <CheckList />
-      <Stats />
+      <Form onAddNote={addNote} />
+      <CheckList
+        notes={notes}
+        onToggle={toggleNote}
+        onDelete={deleteNote}
+        onEdit={editNote}
+        editingId={editingId}
+        setEditingId={setEditingId}
+      />
+      <Stats notes={notes} />
     </div>
   );
 }
 
-const Logo = () => {
-  return <span className="logo">📝 GoCheck ✅</span>;
-};
 
-const Form = () => {
-  return (
-    <div className="add-form">
-      <h3>Ada yang mau dicatat? 🤔</h3>
-    </div>
-  );
-};
 
-const CheckList = () => {
-  return (
-    <div className="list">
-      <ul>
-        {listItems.map((item) => (
-          <Item key={item.id} item={item} />
-        ))}
-      </ul>
-    </div>
-  );
-};
 
-const Item = ({ item }) => {
-  return (
-    <li>
-      <input type="checkbox" />
-      <span style={{ textDecoration: item.done ? 'line-through' : '' }}>
-        {item.title}
-      </span>
-      <button>❌</button>
-    </li>
-  );
-};
 
-const Stats = () => {
-  return (
-    <footer className="stats">
-      <span>📝 Kamu punya x catatan dan baru x yang dichecklist (x%) ✅</span>
-    </footer>
-  );
-};
+
 
 export default App;
